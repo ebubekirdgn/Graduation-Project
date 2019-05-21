@@ -13,7 +13,6 @@
 #include "timer.h"
 
 #include <iostream>
-
 #include "opencv2/opencv.hpp"
 #include <chrono>
 
@@ -82,7 +81,8 @@ Mat* split_two(Mat img){
 
 }
 
-Mat thread_doing(Mat twoimg) {
+Mat thread_doing(Mat twoimg)
+{
 
     Mat sonuc ;
     int MAX_KERNEL_LENGTH = 31;
@@ -94,13 +94,22 @@ Mat thread_doing(Mat twoimg) {
     return twoimg ;
 }
 
+extern "C" JNIEXPORT jstring JNICALL
+Java_com_example_testing_MainActivity_stringFromJNI(
+        JNIEnv *env,
+        jobject /* this */) {
+    std::string hello = "Hello from C++";
+    return env->NewStringUTF(hello.c_str());
+}
+
 extern "C"
 JNIEXPORT jdouble JNICALL
-Java_com_example_myproject_MainActivity_MaoJNI(JNIEnv *env, jobject instance,jlong mat ,jint num) {
+Java_com_example_myproject_MainActivity_MaoJNI(JNIEnv *env, jobject instance, jlong mat, jint num) {
 
+    // TODO
     Mat &input = *(Mat *) mat;
     int numth = num;
-
+    GET_TIME(startTime);
     if (numth == 4) {
         Mat *fourMat = new Mat[4];
         fourMat = split_four(input);
@@ -124,9 +133,9 @@ Java_com_example_myproject_MainActivity_MaoJNI(JNIEnv *env, jobject instance,jlo
         vconcat(fourMat[2], fourMat[3], secondh);
         vconcat(firsth, secondh, input);
 
-    }
 
-    else if (numth == 2) {
+
+    } else if (numth == 2) {
         Mat *twoMat = new Mat[2];
         twoMat = split_two(input);
 
@@ -138,6 +147,7 @@ Java_com_example_myproject_MainActivity_MaoJNI(JNIEnv *env, jobject instance,jlo
 
 
         vconcat(twoMat[0], twoMat[1], input);
+
 
     }
     else if (numth ==1){
@@ -196,10 +206,13 @@ Java_com_example_myproject_MainActivity_MaoJNI(JNIEnv *env, jobject instance,jlo
         vconcat(firstha, secondha, input);
 
     }
-
     GET_TIME(finishTime);
     double totalTime = finishTime - startTime;
     float t = 0.35656;
 
     return totalTime;
+
+
+
+
 }

@@ -1,16 +1,12 @@
 package com.example.myproject;
 
-import android.annotation.SuppressLint;
-import android.app.ProgressDialog;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
-import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
-import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -18,6 +14,9 @@ import android.widget.Toast;
 import org.opencv.android.Utils;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
+import org.opencv.core.Size;
+import org.opencv.imgcodecs.Imgcodecs;
+import org.opencv.imgproc.Imgproc;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -28,16 +27,16 @@ public class MainActivity extends AppCompatActivity {
 
     private Spinner spinner;
     private Button btnSubmit;
-
-
+    private Mat image;
+    private int num ;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        final Spinner spinner = findViewById(R.id.spinner1);
+        spinner =  findViewById(R.id.spinner1);
 
-        btnSubmit = (Button) findViewById(R.id.btnSubmit);
+        btnSubmit =  findViewById(R.id.btnSubmit);
 
         final TextView sonuc = findViewById(R.id.resultTotalTime);
 
@@ -45,36 +44,48 @@ public class MainActivity extends AppCompatActivity {
         //System.out.println(Runtime.getRuntime().availableProcessors());
 
 
-
-
-
         btnSubmit.setOnClickListener(new View.OnClickListener() {
-            @SuppressLint("StaticFieldLeak")
             @Override
             public void onClick(View view) {
+                Bitmap imageViewBitmap = ((BitmapDrawable)imageView.getDrawable()).getBitmap();
+                image = bitmapToMat(imageViewBitmap);
 
-                final ProgressDialog progressDialog = new ProgressDialog(MainActivity.this);
-                progressDialog.setMessage("Devam eden işleminiz bulunmaktadır. Lütfen bekleyiniz..");
-                progressDialog.show();
+                if (image != null) {
+                    Mat m = image;
 
-                new AsyncTask<Void, Void, Long>() {
-                    @Override
-                    protected Long doInBackground(Void... voids) {
-                        Bitmap imageViewBitmap = ((BitmapDrawable)imageView.getDrawable()).getBitmap();
-                         return bitmapToMat(imageViewBitmap).nativeObj;
-
-                    }
-
-                    @Override
-                    protected void onPostExecute(Long aLong) {
-                        final double resultTime = MaoJNI(aLong,Integer.parseInt(spinner.getSelectedItem().toString()));
-                        progressDialog.dismiss();
-                        sonuc.setText(resultTime +"");
-                    }
-                }.execute();
+                    Imgproc.resize(m, m, new Size(m.rows()/2, m.rows()/2), 0, 0,
+                            Imgproc.INTER_AREA);
 
 
-           }
+                    double x = MaoJNI(m.getNativeObjAddr(),Integer.parseInt(spinner.getSelectedItem().toString()));
+                    Bitmap bm1 = Bitmap.createBitmap(m.cols(), m.rows(),Bitmap.Config.ARGB_8888);
+                    Utils.matToBitmap(m, bm1);
+                    // ImageView iv1 = (ImageView) findViewById(R.id.iv1);
+                    imageView.setImageBitmap(bm1);
+                    String timing = Double.toString(x);
+
+                    sonuc.setText(timing );
+                }
+                else {
+                    Toast.makeText(MainActivity.this, "ChOOSE PHOTO FIRST!", Toast.LENGTH_SHORT).show();
+                }
+
+
+
+
+
+                  /*
+
+                    Bitmap imageViewBitmap = ((BitmapDrawable)imageView.getDrawable()).getBitmap();
+                    long a = bitmapToMat(imageViewBitmap).getNativeObjAddr();
+
+
+
+
+                    final double resultTime = MaoJNI(a, 2);
+                    sonuc.setText(resultTime +"");
+                */
+            }
         });
 
     }
